@@ -21,7 +21,6 @@ import argparse
 from urllib.parse import quote
 import json
 
-
 class Colors:
     RED = '\033[91m'
     GREEN = '\033[92m'
@@ -33,14 +32,13 @@ class Colors:
     BOLD = '\033[1m'
     END = '\033[0m'
 
-
 class UsernameChecker:
     def __init__(self):
         self.session = requests.Session()
         self.session.headers.update({
             'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         })
-
+        
         # قائمة المنصات مع معلومات الفحص
         self.platforms = {
             'GitHub': {
@@ -128,19 +126,48 @@ class UsernameChecker:
                 'error_indicators': ['429', '503']
             }
         }
-
+        
         self.results = {}
         self.timeout = 10
 
     def print_banner(self):
         banner = f"""
-{Colors.CYAN}╔══════════════════════════════════════════╗
-║         Username Availability Checker     ║
-║              Kali Linux Tool             ║
-╚══════════════════════════════════════════╝{Colors.END}
+{Colors.CYAN}{Colors.BOLD}
+██╗   ██╗███████╗███████╗██████╗ ███╗   ██╗ █████╗ ███╗   ███╗███████╗
+██║   ██║██╔════╝██╔════╝██╔══██╗████╗  ██║██╔══██╗████╗ ████║██╔════╝
+██║   ██║███████╗█████╗  ██████╔╝██╔██╗ ██║███████║██╔████╔██║█████╗  
+██║   ██║╚════██║██╔══╝  ██╔══██╗██║╚██╗██║██╔══██║██║╚██╔╝██║██╔══╝  
+╚██████╔╝███████║███████╗██║  ██║██║ ╚████║██║  ██║██║ ╚═╝ ██║███████╗
+ ╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝
+                                                                        
+ █████╗ ██╗   ██╗ █████╗ ██╗██╗      █████╗ ██████╗ ██╗██╗     ██╗████████╗██╗   ██╗
+██╔══██╗██║   ██║██╔══██╗██║██║     ██╔══██╗██╔══██╗██║██║     ██║╚══██╔══╝╚██╗ ██╔╝
+███████║██║   ██║███████║██║██║     ███████║██████╔╝██║██║     ██║   ██║    ╚████╔╝ 
+██╔══██║╚██╗ ██╔╝██╔══██║██║██║     ██╔══██║██╔══██╗██║██║     ██║   ██║     ╚██╔╝  
+██║  ██║ ╚████╔╝ ██║  ██║██║███████╗██║  ██║██████╔╝██║███████╗██║   ██║      ██║   
+╚═╝  ╚═╝  ╚═══╝  ╚═╝  ╚═╝╚═╝╚══════╝╚═╝  ╚═╝╚═════╝ ╚═╝╚══════╝╚═╝   ╚═╝      ╚═╝   
+                                                                                      
+ ██████╗██╗  ██╗███████╗ ██████╗██╗  ██╗███████╗██████╗ 
+██╔════╝██║  ██║██╔════╝██╔════╝██║ ██╔╝██╔════╝██╔══██╗
+██║     ███████║█████╗  ██║     █████╔╝ █████╗  ██████╔╝
+██║     ██╔══██║██╔══╝  ██║     ██╔═██╗ ██╔══╝  ██╔══██╗
+╚██████╗██║  ██║███████╗╚██████╗██║  ██╗███████╗██║  ██║
+ ╚═════╝╚═╝  ╚═╝╚══════╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝
+{Colors.END}
+{Colors.GREEN}╔════════════════════════════════════════════════════════════════════════════════╗
+║                          🔍 USERNAME AVAILABILITY CHECKER 🔍                   ║
+║                                                                                ║
+║  {Colors.CYAN}Developer:{Colors.GREEN} @m7mdatd                    {Colors.CYAN}Email:{Colors.GREEN} m@twal.sa                      ║
+║  {Colors.CYAN}GitHub:{Colors.GREEN} github.com/m7mdatd             {Colors.CYAN}Twitter:{Colors.GREEN} @m7mdatd                    ║
+║                                                                                ║
+║  {Colors.YELLOW}🎯 Multi-Platform Username Checker for Digital Investigation & OSINT{Colors.GREEN}        ║
+╚════════════════════════════════════════════════════════════════════════════════╝{Colors.END}
 
-{Colors.YELLOW}[INFO]{Colors.END} فحص توفر أسماء المستخدمين عبر {len(self.platforms)} منصة
-{Colors.YELLOW}[INFO]{Colors.END} المنصات المدعومة: {', '.join(list(self.platforms.keys())[:5])}...
+{Colors.PURPLE}▶ {Colors.BOLD}Scanning {len(self.platforms)} platforms:{Colors.END} {Colors.WHITE}{', '.join(list(self.platforms.keys())[:6])}...{Colors.END}
+{Colors.PURPLE}▶ {Colors.BOLD}Features:{Colors.END} {Colors.WHITE}Concurrent Processing | JSON Export | Interactive Mode{Colors.END}
+{Colors.PURPLE}▶ {Colors.BOLD}Use Cases:{Colors.END} {Colors.WHITE}OSINT | Penetration Testing | Brand Protection{Colors.END}
+
+{Colors.CYAN}{'='*80}{Colors.END}
 """
         print(banner)
 
@@ -148,14 +175,13 @@ class UsernameChecker:
         """فحص توفر اسم المستخدم في منصة واحدة"""
         try:
             url = self.platforms[platform]['url'].format(quote(username))
-
+            
             response = self.session.get(url, timeout=self.timeout, allow_redirects=True)
             status_code = str(response.status_code)
             content = response.text.lower()
-
+            
             # فحص المؤشرات
-            if any(indicator in content.lower() for indicator in
-                   self.platforms[platform]['available_indicators']) or status_code == '404':
+            if any(indicator in content.lower() for indicator in self.platforms[platform]['available_indicators']) or status_code == '404':
                 return 'متاح'
             elif status_code in self.platforms[platform]['error_indicators']:
                 return 'خطأ'
@@ -163,7 +189,7 @@ class UsernameChecker:
                 return 'مأخوذ'
             else:
                 return 'غير محدد'
-
+                
         except requests.exceptions.Timeout:
             return 'انتهت المهلة'
         except requests.exceptions.RequestException:
@@ -174,23 +200,23 @@ class UsernameChecker:
     def check_username(self, username):
         """فحص اسم المستخدم عبر جميع المنصات"""
         print(f"\n{Colors.BOLD}[+] فحص اسم المستخدم: {Colors.CYAN}{username}{Colors.END}")
-        print(f"{Colors.YELLOW}{'=' * 50}{Colors.END}")
-
+        print(f"{Colors.YELLOW}{'='*50}{Colors.END}")
+        
         results = {}
-
+        
         # استخدام threading لتسريع العملية
         with ThreadPoolExecutor(max_workers=10) as executor:
             future_to_platform = {
-                executor.submit(self.check_platform, platform, username): platform
+                executor.submit(self.check_platform, platform, username): platform 
                 for platform in self.platforms
             }
-
+            
             for future in as_completed(future_to_platform):
                 platform = future_to_platform[future]
                 try:
                     result = future.result()
                     results[platform] = result
-
+                    
                     # طباعة النتيجة مع التلوين
                     if result == 'متاح':
                         color = Colors.GREEN
@@ -204,13 +230,13 @@ class UsernameChecker:
                     else:
                         color = Colors.PURPLE
                         symbol = '?'
-
+                    
                     print(f"{color}[{symbol}] {platform:<12} : {result}{Colors.END}")
-
+                    
                 except Exception as e:
                     results[platform] = f'خطأ: {str(e)[:20]}'
                     print(f"{Colors.RED}[!] {platform:<12} : خطأ في الفحص{Colors.END}")
-
+        
         return results
 
     def save_results(self, username, results):
@@ -221,7 +247,7 @@ class UsernameChecker:
             'timestamp': time.strftime('%Y-%m-%d %H:%M:%S'),
             'results': results
         }
-
+        
         try:
             with open(filename, 'w', encoding='utf-8') as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
@@ -234,7 +260,7 @@ class UsernameChecker:
         available = sum(1 for r in results.values() if r == 'متاح')
         taken = sum(1 for r in results.values() if r == 'مأخوذ')
         errors = sum(1 for r in results.values() if 'خطأ' in r or r in ['انتهت المهلة', 'خطأ في الاتصال'])
-
+        
         print(f"\n{Colors.BOLD}ملخص النتائج:{Colors.END}")
         print(f"{Colors.GREEN}متاح: {available}{Colors.END}")
         print(f"{Colors.RED}مأخوذ: {taken}{Colors.END}")
@@ -243,42 +269,41 @@ class UsernameChecker:
     def check_multiple_usernames(self, usernames):
         """فحص عدة أسماء مستخدمين"""
         all_results = {}
-
+        
         for username in usernames:
             if username.strip():
                 results = self.check_username(username.strip())
                 all_results[username.strip()] = results
                 self.print_summary(results)
                 time.sleep(1)  # تأخير بسيط بين الفحوصات
-
+        
         return all_results
 
     def interactive_mode(self):
         """الوضع التفاعلي"""
         print(f"{Colors.CYAN}[INFO] الوضع التفاعلي - اكتب 'exit' للخروج{Colors.END}")
-
+        
         while True:
             try:
                 username = input(f"\n{Colors.BOLD}أدخل اسم المستخدم: {Colors.END}").strip()
-
+                
                 if username.lower() in ['exit', 'quit', 'خروج']:
                     print(f"{Colors.GREEN}[+] شكراً لاستخدام الأداة!{Colors.END}")
                     break
-
+                
                 if not username:
                     continue
-
+                
                 results = self.check_username(username)
                 self.print_summary(results)
-
+                
                 save = input(f"\n{Colors.YELLOW}هل تريد حفظ النتائج؟ (y/n): {Colors.END}").strip().lower()
                 if save in ['y', 'yes', 'نعم']:
                     self.save_results(username, results)
-
+                    
             except KeyboardInterrupt:
                 print(f"\n{Colors.RED}[!] تم إيقاف البرنامج{Colors.END}")
                 break
-
 
 def main():
     parser = argparse.ArgumentParser(
@@ -292,20 +317,20 @@ def main():
   python3 username_checker.py -u user1,user2,user3
         """
     )
-
+    
     parser.add_argument('username', nargs='?', help='اسم المستخدم المراد فحصه')
     parser.add_argument('-f', '--file', help='ملف يحتوي على قائمة أسماء المستخدمين')
     parser.add_argument('-u', '--usernames', help='قائمة أسماء المستخدمين مفصولة بفواصل')
     parser.add_argument('-i', '--interactive', action='store_true', help='الوضع التفاعلي')
     parser.add_argument('-s', '--save', action='store_true', help='حفظ النتائج تلقائياً')
     parser.add_argument('-t', '--timeout', type=int, default=10, help='مهلة الاتصال بالثواني (افتراضي: 10)')
-
+    
     args = parser.parse_args()
-
+    
     checker = UsernameChecker()
     checker.timeout = args.timeout
     checker.print_banner()
-
+    
     try:
         if args.interactive:
             checker.interactive_mode()
@@ -313,7 +338,7 @@ def main():
             try:
                 with open(args.file, 'r', encoding='utf-8') as f:
                     usernames = [line.strip() for line in f if line.strip()]
-
+                
                 if usernames:
                     results = checker.check_multiple_usernames(usernames)
                     if args.save:
@@ -321,18 +346,18 @@ def main():
                             checker.save_results(username, result)
                 else:
                     print(f"{Colors.RED}[!] الملف فارغ أو لا يحتوي على أسماء مستخدمين صالحة{Colors.END}")
-
+                    
             except FileNotFoundError:
                 print(f"{Colors.RED}[!] لم يتم العثور على الملف: {args.file}{Colors.END}")
                 sys.exit(1)
-
+                
         elif args.usernames:
             usernames = [u.strip() for u in args.usernames.split(',') if u.strip()]
             results = checker.check_multiple_usernames(usernames)
             if args.save:
                 for username, result in results.items():
                     checker.save_results(username, result)
-
+                    
         elif args.username:
             results = checker.check_username(args.username)
             checker.print_summary(results)
@@ -340,11 +365,10 @@ def main():
                 checker.save_results(args.username, results)
         else:
             parser.print_help()
-
+            
     except KeyboardInterrupt:
         print(f"\n{Colors.RED}[!] تم إيقاف البرنامج بواسطة المستخدم{Colors.END}")
         sys.exit(1)
-
 
 if __name__ == '__main__':
     main()

@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
 Username Availability Checker
-أداة لفحص توفر أسماء المستخدمين عبر منصات متعددة
+A tool to check the availability of usernames across multiple platforms.
 
-الاستخدام:
+Use:
     python3 username_checker.py <username>
     python3 username_checker.py -f usernames.txt
-    python3 username_checker.py -i  # للوضع التفاعلي
+    python3 username_checker.py -i  # For interactive mode
 
-المؤلف: Kali Security Tools
-الإصدار: 1.0
+Author: Mohammed AlMawi
+Version: 1.0
 """
 
 import requests
@@ -39,7 +39,7 @@ class UsernameChecker:
             'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         })
         
-        # قائمة المنصات مع معلومات الفحص
+        # List of platforms with inspection information
         self.platforms = {
             'GitHub': {
                 'url': 'https://github.com/{}',
@@ -172,7 +172,7 @@ class UsernameChecker:
         print(banner)
 
     def check_platform(self, platform, username):
-        """فحص توفر اسم المستخدم في منصة واحدة"""
+        """Check username availability on one platform"""
         try:
             url = self.platforms[platform]['url'].format(quote(username))
             
@@ -180,31 +180,31 @@ class UsernameChecker:
             status_code = str(response.status_code)
             content = response.text.lower()
             
-            # فحص المؤشرات
+            #Check indicators
             if any(indicator in content.lower() for indicator in self.platforms[platform]['available_indicators']) or status_code == '404':
-                return 'متاح'
+                return 'available'
             elif status_code in self.platforms[platform]['error_indicators']:
-                return 'خطأ'
+                return 'error'
             elif status_code == '200':
-                return 'مأخوذ'
+                return 'taken'
             else:
-                return 'غير محدد'
+                return 'undefined'
                 
         except requests.exceptions.Timeout:
-            return 'انتهت المهلة'
+            return 'The time limit has expired'
         except requests.exceptions.RequestException:
-            return 'خطأ في الاتصال'
+            return 'Communication error'
         except Exception as e:
-            return f'خطأ: {str(e)[:20]}'
+            return f'error: {str(e)[:20]}'
 
     def check_username(self, username):
-        """فحص اسم المستخدم عبر جميع المنصات"""
-        print(f"\n{Colors.BOLD}[+] فحص اسم المستخدم: {Colors.CYAN}{username}{Colors.END}")
+        """Username verification across all platforms"""
+        print(f"\n{Colors.BOLD}[+] Check username: {Colors.CYAN}{username}{Colors.END}")
         print(f"{Colors.YELLOW}{'='*50}{Colors.END}")
         
         results = {}
         
-        # استخدام threading لتسريع العملية
+        # Use threading to speed up the process.
         with ThreadPoolExecutor(max_workers=10) as executor:
             future_to_platform = {
                 executor.submit(self.check_platform, platform, username): platform 
@@ -217,14 +217,14 @@ class UsernameChecker:
                     result = future.result()
                     results[platform] = result
                     
-                    # طباعة النتيجة مع التلوين
-                    if result == 'متاح':
+                    # Print the result with coloring
+                    if result == 'available':
                         color = Colors.GREEN
                         symbol = '✓'
-                    elif result == 'مأخوذ':
+                    elif result == 'taken':
                         color = Colors.RED
                         symbol = '✗'
-                    elif result == 'خطأ' or 'خطأ' in result:
+                    elif result == 'error' or 'error' in result:
                         color = Colors.YELLOW
                         symbol = '⚠'
                     else:
@@ -234,13 +234,13 @@ class UsernameChecker:
                     print(f"{color}[{symbol}] {platform:<12} : {result}{Colors.END}")
                     
                 except Exception as e:
-                    results[platform] = f'خطأ: {str(e)[:20]}'
-                    print(f"{Colors.RED}[!] {platform:<12} : خطأ في الفحص{Colors.END}")
+                    results[platform] = f'error: {str(e)[:20]}'
+                    print(f"{Colors.RED}[!] {platform:<12} : Scan error{Colors.END}")
         
         return results
 
     def save_results(self, username, results):
-        """حفظ النتائج في ملف JSON"""
+        """Save the results to a file JSON"""
         filename = f"username_check_{username}_{int(time.time())}.json"
         data = {
             'username': username,
@@ -251,23 +251,23 @@ class UsernameChecker:
         try:
             with open(filename, 'w', encoding='utf-8') as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
-            print(f"\n{Colors.GREEN}[+] تم حفظ النتائج في: {filename}{Colors.END}")
+            print(f"\n{Colors.GREEN}[+]The results are saved in: {filename}{Colors.END}")
         except Exception as e:
-            print(f"{Colors.RED}[!] خطأ في حفظ الملف: {e}{Colors.END}")
+            print(f"{Colors.RED}[!] Error saving file: {e}{Colors.END}")
 
     def print_summary(self, results):
-        """طباعة ملخص النتائج"""
-        available = sum(1 for r in results.values() if r == 'متاح')
-        taken = sum(1 for r in results.values() if r == 'مأخوذ')
-        errors = sum(1 for r in results.values() if 'خطأ' in r or r in ['انتهت المهلة', 'خطأ في الاتصال'])
+        """Print summary of results"""
+        available = sum(1 for r in results.values() if r == 'available')
+        taken = sum(1 for r in results.values() if r == 'taken')
+        errors = sum(1 for r in results.values() if 'error' in r or r in ['The time limit has expired', 'Communication error '])
         
-        print(f"\n{Colors.BOLD}ملخص النتائج:{Colors.END}")
-        print(f"{Colors.GREEN}متاح: {available}{Colors.END}")
-        print(f"{Colors.RED}مأخوذ: {taken}{Colors.END}")
-        print(f"{Colors.YELLOW}أخطاء: {errors}{Colors.END}")
+        print(f"\n{Colors.BOLD}Summary of results:{Colors.END}")
+        print(f"{Colors.GREEN}available: {available}{Colors.END}")
+        print(f"{Colors.RED}taken: {taken}{Colors.END}")
+        print(f"{Colors.YELLOW}errors: {errors}{Colors.END}")
 
     def check_multiple_usernames(self, usernames):
-        """فحص عدة أسماء مستخدمين"""
+        """Check multiple usernames"""
         all_results = {}
         
         for username in usernames:
@@ -275,20 +275,20 @@ class UsernameChecker:
                 results = self.check_username(username.strip())
                 all_results[username.strip()] = results
                 self.print_summary(results)
-                time.sleep(1)  # تأخير بسيط بين الفحوصات
+                time.sleep(1)  # slight delay between tests
         
         return all_results
 
     def interactive_mode(self):
-        """الوضع التفاعلي"""
-        print(f"{Colors.CYAN}[INFO] الوضع التفاعلي - اكتب 'exit' للخروج{Colors.END}")
+        """Interactive mode"""
+        print(f"{Colors.CYAN}[INFO] Interactive Mode - Write 'exit' To go out{Colors.END}")
         
         while True:
             try:
-                username = input(f"\n{Colors.BOLD}أدخل اسم المستخدم: {Colors.END}").strip()
+                username = input(f"\n{Colors.BOLD}Enter the user name: {Colors.END}").strip()
                 
-                if username.lower() in ['exit', 'quit', 'خروج']:
-                    print(f"{Colors.GREEN}[+] شكراً لاستخدام الأداة!{Colors.END}")
+                if username.lower() in ['exit', 'quit', 'exit']:
+                    print(f"{Colors.GREEN}[+] Thanks for using the tool!{Colors.END}")
                     break
                 
                 if not username:
@@ -297,20 +297,20 @@ class UsernameChecker:
                 results = self.check_username(username)
                 self.print_summary(results)
                 
-                save = input(f"\n{Colors.YELLOW}هل تريد حفظ النتائج؟ (y/n): {Colors.END}").strip().lower()
-                if save in ['y', 'yes', 'نعم']:
+                save = input(f"\n{Colors.YELLOW}Do you want to save the results? (y/n): {Colors.END}").strip().lower()
+                if save in ['y', 'yes', 'yes']:
                     self.save_results(username, results)
                     
             except KeyboardInterrupt:
-                print(f"\n{Colors.RED}[!] تم إيقاف البرنامج{Colors.END}")
+                print(f"\n{Colors.RED}[!] The program has been stopped{Colors.END}")
                 break
 
 def main():
     parser = argparse.ArgumentParser(
-        description='أداة فحص توفر أسماء المستخدمين عبر منصات متعددة',
+        description='Cross-platform username availability checker',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-أمثلة على الاستخدام:
+Examples of use:
   python3 username_checker.py john_doe
   python3 username_checker.py -f usernames.txt
   python3 username_checker.py -i
@@ -318,12 +318,12 @@ def main():
         """
     )
     
-    parser.add_argument('username', nargs='?', help='اسم المستخدم المراد فحصه')
-    parser.add_argument('-f', '--file', help='ملف يحتوي على قائمة أسماء المستخدمين')
-    parser.add_argument('-u', '--usernames', help='قائمة أسماء المستخدمين مفصولة بفواصل')
-    parser.add_argument('-i', '--interactive', action='store_true', help='الوضع التفاعلي')
-    parser.add_argument('-s', '--save', action='store_true', help='حفظ النتائج تلقائياً')
-    parser.add_argument('-t', '--timeout', type=int, default=10, help='مهلة الاتصال بالثواني (افتراضي: 10)')
+    parser.add_argument('username', nargs='?', help='Username to be checked')
+    parser.add_argument('-f', '--file', help='A file containing a list of user names')
+    parser.add_argument('-u', '--usernames', help='Comma separated list of user names')
+    parser.add_argument('-i', '--interactive', action='store_true', help='Interactive mode')
+    parser.add_argument('-s', '--save', action='store_true', help='Save results automatically')
+    parser.add_argument('-t', '--timeout', type=int, default=10, help='Connection timeout in seconds (hypothetical: 10)')
     
     args = parser.parse_args()
     
@@ -345,10 +345,10 @@ def main():
                         for username, result in results.items():
                             checker.save_results(username, result)
                 else:
-                    print(f"{Colors.RED}[!] الملف فارغ أو لا يحتوي على أسماء مستخدمين صالحة{Colors.END}")
+                    print(f"{Colors.RED}[!] The file is empty or does not contain valid usernames.{Colors.END}")
                     
             except FileNotFoundError:
-                print(f"{Colors.RED}[!] لم يتم العثور على الملف: {args.file}{Colors.END}")
+                print(f"{Colors.RED}[!] file not found: {args.file}{Colors.END}")
                 sys.exit(1)
                 
         elif args.usernames:
@@ -367,7 +367,7 @@ def main():
             parser.print_help()
             
     except KeyboardInterrupt:
-        print(f"\n{Colors.RED}[!] تم إيقاف البرنامج بواسطة المستخدم{Colors.END}")
+        print(f"\n{Colors.RED}[!] The program was stopped by the user.{Colors.END}")
         sys.exit(1)
 
 if __name__ == '__main__':

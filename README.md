@@ -57,19 +57,18 @@ A fast and efficient tool to check username availability across multiple social 
 
 ### Quick Install (Kali Linux / Debian / Ubuntu)
 
-```bash
-# Clone the repository
-git clone https://github.com/m7mdatd/username-availability-checker.git
+# Method 1: Using apt (Recommended)
+sudo apt update
+sudo apt install python3-requests
 
-# Navigate to the directory
-cd username-availability-checker
+# Method 2: Using virtual environment
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
 
-# Install dependencies
-pip3 install -r requirements.txt
-
-# Make executable
-chmod +x username_checker.py
-```
+# Method 3: Using pipx
+sudo apt install pipx
+pipx install requests
 
 ### Manual Installation
 
